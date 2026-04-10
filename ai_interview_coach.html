@@ -1,0 +1,426 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); }
+  .app { min-height: 100vh; padding: 2rem 1rem; background: transparent; }
+  .header { text-align: center; margin-bottom: 2.5rem; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; background: #1a1f2e; color: #7c8cf8; border: 0.5px solid #3a3f5c; border-radius: 20px; padding: 4px 14px; font-size: 12px; font-weight: 500; margin-bottom: 1rem; }
+  .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #7c8cf8; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+  .title { font-size: 28px; font-weight: 500; color: #e8eaf6; margin-bottom: 0.5rem; }
+  .subtitle { font-size: 15px; color: #8b9cb0; }
+  .main { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem; }
+  .card { background: #0f1219; border: 0.5px solid #1e2535; border-radius: 16px; padding: 1.5rem; }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+  .card-title { font-size: 13px; font-weight: 500; color: #6b7a99; text-transform: uppercase; letter-spacing: 0.08em; }
+  .question-tag { font-size: 11px; background: #1a2540; color: #7c8cf8; border-radius: 6px; padding: 3px 10px; font-weight: 500; }
+  .question-text { font-size: 18px; font-weight: 500; color: #e8eaf6; line-height: 1.5; margin-bottom: 1.25rem; }
+  .question-hint { font-size: 13px; color: #5a6a82; }
+  .question-nav { display: flex; gap: 8px; }
+  .nav-btn { background: #1a1f2e; border: 0.5px solid #2a3048; color: #8b9cb0; border-radius: 8px; padding: 6px 14px; font-size: 13px; cursor: pointer; transition: all 0.15s; }
+  .nav-btn:hover { background: #232840; color: #e8eaf6; }
+  .textarea-wrap { position: relative; }
+  textarea { width: 100%; min-height: 140px; background: #080c12; border: 0.5px solid #1e2535; border-radius: 12px; color: #c8d4e8; font-size: 15px; font-family: var(--font-sans); line-height: 1.7; padding: 1rem 1.25rem; resize: vertical; transition: border-color 0.2s; outline: none; }
+  textarea:focus { border-color: #3a4a7a; }
+  textarea::placeholder { color: #3a4858; }
+  .word-count { position: absolute; bottom: 10px; right: 14px; font-size: 12px; color: #3a4858; }
+  .action-row { display: flex; align-items: center; justify-content: space-between; margin-top: 1rem; flex-wrap: wrap; gap: 0.75rem; }
+  .tips-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tip-chip { font-size: 12px; color: #5a6a82; background: #0f1520; border: 0.5px solid #1a2535; border-radius: 6px; padding: 4px 10px; }
+  .analyze-btn { display: flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #4a6cf7, #7c8cf8); color: #fff; border: none; border-radius: 10px; padding: 10px 24px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+  .analyze-btn:hover { transform: translateY(-1px); opacity: 0.92; }
+  .analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .analyze-btn .spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .results { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  @media (max-width: 640px) { .results { grid-template-columns: 1fr; } }
+  .score-ring-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1rem 0; }
+  .score-label { font-size: 12px; color: #6b7a99; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem; }
+  .ring-svg { position: relative; }
+  .score-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+  .score-num { font-size: 36px; font-weight: 500; color: #e8eaf6; }
+  .score-denom { font-size: 14px; color: #5a6a82; }
+  .score-grade { font-size: 13px; color: #7c8cf8; margin-top: 4px; }
+  .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .metric-card { background: #080c12; border: 0.5px solid #1a2535; border-radius: 10px; padding: 0.875rem; }
+  .metric-label { font-size: 11px; color: #5a6a82; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .metric-value { font-size: 20px; font-weight: 500; color: #e8eaf6; }
+  .metric-sub { font-size: 11px; margin-top: 2px; }
+  .metric-bar { height: 3px; background: #1a2535; border-radius: 2px; margin-top: 8px; overflow: hidden; }
+  .metric-fill { height: 100%; border-radius: 2px; transition: width 1s ease; }
+  .feedback-list { display: flex; flex-direction: column; gap: 10px; }
+  .feedback-item { display: flex; gap: 12px; align-items: flex-start; padding: 0.875rem; background: #080c12; border: 0.5px solid #1a2535; border-radius: 10px; }
+  .feedback-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .fi-good { background: #0d2a1a; }
+  .fi-warn { background: #2a1a0d; }
+  .fi-info { background: #0d1a2a; }
+  .feedback-text { font-size: 13px; color: #a0b0c8; line-height: 1.6; }
+  .feedback-text strong { color: #c8d4e8; font-weight: 500; }
+  .filler-wrap { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 0.75rem; }
+  .filler-tag { font-size: 12px; background: #2a1a0d; color: #e09050; border-radius: 6px; padding: 3px 10px; }
+  .placeholder-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px; gap: 0.75rem; }
+  .placeholder-icon { font-size: 32px; opacity: 0.3; }
+  .placeholder-text { font-size: 14px; color: #3a4a62; text-align: center; }
+  .radar-wrap { width: 100%; display: flex; justify-content: center; }
+  .section-title { font-size: 13px; font-weight: 500; color: #6b7a99; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1rem; }
+  .error-msg { color: #e07070; font-size: 13px; padding: 0.75rem; background: #2a0f0f; border-radius: 8px; border: 0.5px solid #4a1a1a; margin-top: 0.75rem; }
+</style>
+
+<div class="app">
+  <h2 class="sr-only">AI Interview Coach — Practice mode with real-time answer analysis</h2>
+  <div class="header">
+    <div class="badge"><span class="badge-dot"></span> AI-Powered · Live Analysis</div>
+    <h1 class="title">Interview Coach</h1>
+    <p class="subtitle">Practice answers. Get instant AI feedback. Ace the interview.</p>
+  </div>
+
+  <div class="main">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Practice Mode</span>
+        <span class="question-tag" id="q-category">Behavioural</span>
+      </div>
+      <p class="question-text" id="question-text">Tell me about a time you failed and what you learned from it.</p>
+      <p class="question-hint">Use the STAR method: Situation, Task, Action, Result</p>
+      <div class="question-nav" style="margin-top:1rem;">
+        <button class="nav-btn" onclick="prevQ()">← Prev</button>
+        <button class="nav-btn" onclick="nextQ()">Next →</button>
+        <button class="nav-btn" onclick="randomQ()" style="margin-left:auto;">⟳ Random</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Your Answer</span>
+      </div>
+      <div class="textarea-wrap">
+        <textarea id="answer-input" placeholder="Type your answer here... Aim for 150–300 words for a strong response." oninput="updateCount()"></textarea>
+        <span class="word-count" id="word-count">0 words</span>
+      </div>
+      <div class="action-row">
+        <div class="tips-row">
+          <span class="tip-chip">150–300 words ideal</span>
+          <span class="tip-chip">Avoid filler words</span>
+          <span class="tip-chip">Be specific</span>
+        </div>
+        <button class="analyze-btn" id="analyze-btn" onclick="analyze()">
+          <span id="btn-icon">▶</span> Analyze Answer
+        </button>
+      </div>
+      <div id="error-area"></div>
+    </div>
+
+    <div id="results-section" style="display:none;">
+      <div class="results">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Overall Score</span></div>
+          <div class="score-ring-wrap">
+            <div style="position:relative; width:160px; height:160px;">
+              <svg width="160" height="160" role="img" aria-label="Score ring">
+                <circle cx="80" cy="80" r="66" fill="none" stroke="#1a2535" stroke-width="10"/>
+                <circle id="score-circle" cx="80" cy="80" r="66" fill="none" stroke="#4a6cf7" stroke-width="10"
+                  stroke-linecap="round" stroke-dasharray="414.7" stroke-dashoffset="414.7"
+                  transform="rotate(-90 80 80)" style="transition: stroke-dashoffset 1.2s ease;"/>
+              </svg>
+              <div class="score-center">
+                <div class="score-num" id="score-num">—</div>
+                <div class="score-denom">/100</div>
+                <div class="score-grade" id="score-grade"></div>
+              </div>
+            </div>
+          </div>
+          <div class="metrics-grid" style="margin-top:1rem;">
+            <div class="metric-card">
+              <div class="metric-label">Confidence</div>
+              <div class="metric-value" id="m-confidence">—</div>
+              <div class="metric-sub" id="m-confidence-sub" style="color:#5a6a82;"></div>
+              <div class="metric-bar"><div class="metric-fill" id="mf-confidence" style="width:0%;background:#4a6cf7;"></div></div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Filler Words</div>
+              <div class="metric-value" id="m-fillers">—</div>
+              <div class="metric-sub" id="m-fillers-sub" style="color:#5a6a82;"></div>
+              <div class="metric-bar"><div class="metric-fill" id="mf-fillers" style="width:0%;background:#e07050;"></div></div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Clarity</div>
+              <div class="metric-value" id="m-clarity">—</div>
+              <div class="metric-sub" id="m-clarity-sub" style="color:#5a6a82;"></div>
+              <div class="metric-bar"><div class="metric-fill" id="mf-clarity" style="width:0%;background:#40c878;"></div></div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Word Count</div>
+              <div class="metric-value" id="m-words">—</div>
+              <div class="metric-sub" id="m-words-sub" style="color:#5a6a82;"></div>
+              <div class="metric-bar"><div class="metric-fill" id="mf-words" style="width:0%;background:#f0a030;"></div></div>
+            </div>
+          </div>
+          <div id="filler-tags-area" style="margin-top:1rem;"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">Performance Radar</span></div>
+          <div class="radar-wrap">
+            <canvas id="radarChart" width="260" height="220" role="img" aria-label="Radar chart showing performance across five dimensions"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:1.5rem;">
+        <div class="card-header"><span class="card-title">AI Coach Feedback</span></div>
+        <div id="feedback-list" class="feedback-list">
+          <div class="placeholder-state">
+            <div class="placeholder-icon">💬</div>
+            <div class="placeholder-text">Feedback loading...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const QUESTIONS = [
+  { text: "Tell me about a time you failed and what you learned from it.", cat: "Behavioural" },
+  { text: "Describe a situation where you had to work with a difficult team member.", cat: "Behavioural" },
+  { text: "Walk me through a project you're proud of and your role in its success.", cat: "Experience" },
+  { text: "Where do you see yourself in five years?", cat: "Career" },
+  { text: "What is your greatest professional strength, and give an example.", cat: "Self-Awareness" },
+  { text: "Describe a time you had to adapt quickly to a major change.", cat: "Adaptability" },
+  { text: "Tell me about a time you led a team or initiative without formal authority.", cat: "Leadership" },
+  { text: "How do you prioritise when you have multiple deadlines competing?", cat: "Time Management" },
+];
+
+const FILLER_WORDS = ['um','uh','like','basically','actually','literally','you know','sort of','kind of','i mean','right','so','well','just','really','very','stuff','things','whatever','anyway','honestly','totally'];
+
+let qIndex = 0;
+let radarChart = null;
+
+function setQuestion(i) {
+  qIndex = (i + QUESTIONS.length) % QUESTIONS.length;
+  document.getElementById('question-text').textContent = QUESTIONS[qIndex].text;
+  document.getElementById('q-category').textContent = QUESTIONS[qIndex].cat;
+  document.getElementById('results-section').style.display = 'none';
+  document.getElementById('answer-input').value = '';
+  document.getElementById('word-count').textContent = '0 words';
+  document.getElementById('error-area').innerHTML = '';
+}
+function prevQ() { setQuestion(qIndex - 1); }
+function nextQ() { setQuestion(qIndex + 1); }
+function randomQ() { setQuestion(Math.floor(Math.random() * QUESTIONS.length)); }
+
+function updateCount() {
+  const words = countWords(document.getElementById('answer-input').value);
+  document.getElementById('word-count').textContent = words + ' words';
+}
+
+function countWords(text) {
+  return text.trim() ? text.trim().split(/\s+/).length : 0;
+}
+
+function localAnalysis(text) {
+  const lower = text.toLowerCase();
+  const words = text.trim().split(/\s+/);
+  const wc = words.length;
+
+  const foundFillers = [];
+  FILLER_WORDS.forEach(fw => {
+    const re = new RegExp('\\b' + fw.replace(/\s+/g, '\\s+') + '\\b', 'gi');
+    const matches = text.match(re);
+    if (matches) foundFillers.push({ word: fw, count: matches.length });
+  });
+  const totalFillers = foundFillers.reduce((a,b) => a + b.count, 0);
+  const fillerRate = wc > 0 ? totalFillers / wc : 0;
+
+  const positiveWords = ['achieved','solved','led','improved','learned','grew','succeeded','delivered','built','created','organised','managed','completed','overcame','initiative','result','outcome'];
+  const hesitantWords = ['maybe','perhaps','i think','i guess','i suppose','not sure','might','probably','possibly','kinda','sorta','i hope'];
+  let positiveCount = 0, hesitantCount = 0;
+  positiveWords.forEach(w => { if (lower.includes(w)) positiveCount++; });
+  hesitantWords.forEach(w => { if (lower.includes(w)) hesitantCount++; });
+  const confidence = Math.min(100, Math.max(20, Math.round(55 + (positiveCount * 5) - (hesitantCount * 8) - (fillerRate * 60))));
+
+  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 5);
+  const avgSentLen = sentences.length > 0 ? wc / sentences.length : 0;
+  const hasSTAR = lower.includes('situation') || lower.includes('task') || lower.includes('action') || lower.includes('result') || lower.includes('outcome') || lower.includes('when i') || lower.includes('i was');
+  const idealWords = wc >= 120 && wc <= 350;
+  const clarity = Math.min(100, Math.max(10, Math.round(
+    (avgSentLen > 8 && avgSentLen < 25 ? 35 : avgSentLen > 5 ? 20 : 10) +
+    (hasSTAR ? 30 : 0) +
+    (idealWords ? 25 : wc > 50 ? 10 : 0) +
+    (fillerRate < 0.03 ? 10 : 0)
+  )));
+
+  const wcScore = wc < 50 ? 20 : wc < 100 ? 45 : wc < 150 ? 65 : wc <= 300 ? 100 : wc <= 400 ? 80 : 55;
+  const fillerScore = Math.max(0, Math.round(100 - fillerRate * 400));
+  const overall = Math.round((clarity * 0.35) + (confidence * 0.3) + (fillerScore * 0.2) + (wcScore * 0.15));
+
+  return { overall, confidence, clarity, fillerScore, wcScore, wc, foundFillers, totalFillers, sentences: sentences.length, avgSentLen: Math.round(avgSentLen) };
+}
+
+async function getAIFeedback(question, answer, scores) {
+  const prompt = `You are an expert interview coach. A candidate answered this interview question:
+
+Question: "${question}"
+
+Answer: "${answer}"
+
+Local NLP analysis scores (0-100):
+- Overall: ${scores.overall}
+- Clarity: ${scores.clarity}
+- Confidence: ${scores.confidence}
+- Filler words found: ${scores.foundFillers.map(f => f.word + ' (×' + f.count + ')').join(', ') || 'none'}
+- Word count: ${scores.wc}
+
+Give exactly 4 pieces of feedback as a JSON array. Each item has: "type" ("strength", "warning", or "tip"), "title" (3-6 words), "body" (1-2 sentences of specific, actionable advice referencing their actual answer content).
+
+Return ONLY valid JSON array, no markdown, no preamble. Example format:
+[{"type":"strength","title":"Strong opening statement","body":"..."},{"type":"warning","title":"Reduce filler words","body":"..."},{"type":"tip","title":"Add a quantifiable result","body":"..."},{"type":"tip","title":"Mention specific skills","body":"..."}]`;
+
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1000,
+      messages: [{ role: "user", content: prompt }]
+    })
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error?.message || 'API error');
+  const text = data.content.map(b => b.text || '').join('');
+  const clean = text.replace(/```json|```/g, '').trim();
+  return JSON.parse(clean);
+}
+
+function renderScores(s) {
+  document.getElementById('score-num').textContent = s.overall;
+  const grade = s.overall >= 85 ? 'Excellent' : s.overall >= 70 ? 'Good' : s.overall >= 55 ? 'Fair' : 'Needs Work';
+  const gradeColor = s.overall >= 85 ? '#40c878' : s.overall >= 70 ? '#4a6cf7' : s.overall >= 55 ? '#f0a030' : '#e07050';
+  document.getElementById('score-grade').textContent = grade;
+  document.getElementById('score-grade').style.color = gradeColor;
+
+  const circ = document.getElementById('score-circle');
+  const circum = 2 * Math.PI * 66;
+  setTimeout(() => {
+    circ.style.strokeDashoffset = circum * (1 - s.overall / 100);
+    const c = s.overall >= 85 ? '#40c878' : s.overall >= 70 ? '#4a6cf7' : s.overall >= 55 ? '#f0a030' : '#e07050';
+    circ.style.stroke = c;
+  }, 100);
+
+  document.getElementById('m-confidence').textContent = s.confidence;
+  document.getElementById('m-confidence-sub').textContent = s.confidence >= 70 ? 'Strong' : 'Hesitant';
+  document.getElementById('mf-confidence').style.width = s.confidence + '%';
+
+  document.getElementById('m-fillers').textContent = s.totalFillers;
+  document.getElementById('m-fillers-sub').textContent = s.totalFillers === 0 ? 'None detected' : s.totalFillers <= 2 ? 'Minimal' : 'Reduce these';
+  document.getElementById('mf-fillers').style.width = Math.min(100, s.totalFillers * 15) + '%';
+  document.getElementById('mf-fillers').style.background = s.totalFillers <= 1 ? '#40c878' : s.totalFillers <= 3 ? '#f0a030' : '#e07050';
+
+  document.getElementById('m-clarity').textContent = s.clarity;
+  document.getElementById('m-clarity-sub').textContent = s.clarity >= 70 ? 'Clear structure' : 'Add structure';
+  document.getElementById('mf-clarity').style.width = s.clarity + '%';
+
+  document.getElementById('m-words').textContent = s.wc;
+  document.getElementById('m-words-sub').textContent = s.wc < 100 ? 'Too brief' : s.wc <= 300 ? 'Ideal length' : 'Consider trimming';
+  document.getElementById('mf-words').style.width = Math.min(100, (s.wc / 300) * 100) + '%';
+
+  if (s.foundFillers.length > 0) {
+    document.getElementById('filler-tags-area').innerHTML = '<div style="font-size:11px;color:#5a6a82;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em;">Filler words detected</div><div class="filler-wrap">' +
+      s.foundFillers.map(f => `<span class="filler-tag">${f.word} ×${f.count}</span>`).join('') + '</div>';
+  } else {
+    document.getElementById('filler-tags-area').innerHTML = '<div style="font-size:12px;color:#40c878;margin-top:4px;">✓ No filler words detected</div>';
+  }
+
+  renderRadar(s);
+}
+
+function renderRadar(s) {
+  const starScore = Math.min(100, Math.max(10,
+    (['situation','task','action','result','outcome','when i','as a result'].filter(k =>
+      document.getElementById('answer-input').value.toLowerCase().includes(k)).length / 3) * 100
+  ));
+
+  const ctx = document.getElementById('radarChart').getContext('2d');
+  if (radarChart) radarChart.destroy();
+  radarChart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: ['Clarity', 'Confidence', 'Filler-free', 'Length', 'Structure'],
+      datasets: [{
+        data: [s.clarity, s.confidence, s.fillerScore, s.wcScore, Math.round(starScore)],
+        backgroundColor: 'rgba(74,108,247,0.15)',
+        borderColor: '#4a6cf7',
+        borderWidth: 2,
+        pointBackgroundColor: '#4a6cf7',
+        pointRadius: 4,
+        pointHoverRadius: 6,
+      }]
+    },
+    options: {
+      responsive: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        r: {
+          min: 0, max: 100,
+          ticks: { display: false, stepSize: 25 },
+          grid: { color: '#1a2535' },
+          pointLabels: { color: '#8b9cb0', font: { size: 12, family: 'sans-serif' } },
+          angleLines: { color: '#1a2535' }
+        }
+      }
+    }
+  });
+}
+
+function renderFeedback(items) {
+  const iconMap = { strength: { icon: '✓', cls: 'fi-good' }, warning: { icon: '⚠', cls: 'fi-warn' }, tip: { icon: '→', cls: 'fi-info' } };
+  document.getElementById('feedback-list').innerHTML = items.map(item => {
+    const { icon, cls } = iconMap[item.type] || iconMap.tip;
+    return `<div class="feedback-item">
+      <div class="feedback-icon ${cls}" style="font-size:13px;color:${item.type==='strength'?'#40c878':item.type==='warning'?'#e07050':'#7c8cf8'};">${icon}</div>
+      <div class="feedback-text"><strong>${item.title}.</strong> ${item.body}</div>
+    </div>`;
+  }).join('');
+}
+
+async function analyze() {
+  const answer = document.getElementById('answer-input').value.trim();
+  if (answer.length < 20) {
+    document.getElementById('error-area').innerHTML = '<div class="error-msg">Please write at least a few sentences before analyzing.</div>';
+    return;
+  }
+  document.getElementById('error-area').innerHTML = '';
+  const btn = document.getElementById('analyze-btn');
+  const icon = document.getElementById('btn-icon');
+  btn.disabled = true;
+  icon.outerHTML = '<span id="btn-icon" class="spinner"></span>';
+
+  const scores = localAnalysis(answer);
+  document.getElementById('results-section').style.display = 'block';
+  document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  renderScores(scores);
+
+  document.getElementById('feedback-list').innerHTML = '<div class="placeholder-state"><div class="placeholder-icon" style="font-size:20px;opacity:0.4;">⟳</div><div class="placeholder-text">AI coach is reviewing your answer...</div></div>';
+
+  try {
+    const feedbackItems = await getAIFeedback(QUESTIONS[qIndex].text, answer, scores);
+    renderFeedback(feedbackItems);
+  } catch(e) {
+    document.getElementById('feedback-list').innerHTML = `
+      <div class="feedback-item"><div class="feedback-icon fi-info" style="color:#7c8cf8;">→</div>
+      <div class="feedback-text"><strong>Structure your answer with STAR.</strong> Clearly outline the Situation, Task, Action, and Result to make your story compelling and easy to follow.</div></div>
+      <div class="feedback-item"><div class="feedback-icon fi-warn" style="color:#e07050;">⚠</div>
+      <div class="feedback-text"><strong>Quantify your impact.</strong> Wherever possible, use numbers and metrics to demonstrate the real-world effect of your actions.</div></div>
+      <div class="feedback-item"><div class="feedback-icon fi-good" style="color:#40c878;">✓</div>
+      <div class="feedback-text"><strong>Keep answers focused.</strong> Aim for 150–250 words — enough to be thorough, short enough to hold attention.</div></div>
+      <div class="feedback-item"><div class="feedback-icon fi-info" style="color:#7c8cf8;">→</div>
+      <div class="feedback-text"><strong>End with a lesson learned.</strong> Interviewers want to see self-awareness. Closing with what you took away shows growth mindset.</div></div>`;
+  }
+
+  btn.disabled = false;
+  document.getElementById('btn-icon').outerHTML = '<span id="btn-icon">▶</span>';
+}
+
+setQuestion(0);
+</script>
